@@ -1,7 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, declarative_base
+import os
 
-DATABASE_URL = "mysql+pymysql://root:SmartLocker%402026@localhost:3306/smart_locker"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(DATABASE_URL)
 
@@ -9,9 +10,9 @@ SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine
-) 
+)
 
-Base = declarative_base()  
+Base = declarative_base()
 
 def get_db():
     db = SessionLocal()
