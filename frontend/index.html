@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Locker - Hệ thống Tủ khóa Thông minh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-bg: #eef2ff;
+            --success: #22c55e;
+            --success-bg: #f0fdf4;
+            --warning: #f59e0b;
+            --warning-bg: #fffbeb;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --gray-900: #111827;
+            --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+            --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,.1), 0 4px 6px rgba(0,0,0,.05);
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+
+        /* ---- Sidebar ---- */
+        .sidebar {
+            position: fixed; left: 0; top: 0; bottom: 0;
+            width: 260px;
+            background: linear-gradient(180deg, #312e81 0%, #4338ca 100%);
+            color: #fff;
+            padding: 24px 0;
+            z-index: 100;
+            display: flex; flex-direction: column;
+        }
+        .sidebar-logo {
+            padding: 0 24px 32px;
+            display: flex; align-items: center; gap: 12px;
+            font-size: 20px; font-weight: 700;
+        }
+        .sidebar-logo i { font-size: 28px; color: var(--primary-light); }
+        .sidebar-nav { flex: 1; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 24px;
+            color: rgba(255,255,255,.7);
+            cursor: pointer;
+            transition: all .2s;
+            font-size: 14px; font-weight: 500;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover { background: rgba(255,255,255,.1); color: #fff; }
+        .nav-item.active {
+            background: rgba(255,255,255,.15);
+            color: #fff;
+            border-left-color: var(--primary-light);
+        }
+        .nav-item i { width: 20px; text-align: center; font-size: 16px; }
+
+        /* ---- Main ---- */
+        .main { margin-left: 260px; padding: 32px; min-height: 100vh; }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+        .page-header h1 { font-size: 28px; font-weight: 700; color: var(--gray-900); }
+        .page-header p { color: var(--gray-500); margin-top: 4px; }
+
+        /* ---- Stats Cards ---- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            display: flex; align-items: center; gap: 16px;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .stat-icon {
+            width: 52px; height: 52px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+        }
+        .stat-icon.users { background: var(--primary-bg); color: var(--primary); }
+        .stat-icon.lockers { background: var(--success-bg); color: var(--success); }
+        .stat-icon.packages { background: var(--warning-bg); color: var(--warning); }
+        .stat-icon.deliveries { background: var(--danger-bg); color: var(--danger); }
+        .stat-info h3 { font-size: 28px; font-weight: 700; }
+        .stat-info p { color: var(--gray-500); font-size: 13px; font-weight: 500; }
+
+        /* ---- Sections ---- */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* ---- Table Card ---- */
+        .card {
+            background: #fff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .card-header h2 { font-size: 18px; font-weight: 600; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            text-align: left;
+            padding: 14px 24px;
+            background: var(--gray-50);
+            color: var(--gray-500);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        td {
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 14px;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: var(--gray-50); }
+
+        /* ---- Badges ---- */
+        .badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+        }
+        .badge.available { background: var(--success-bg); color: #16a34a; }
+        .badge.available::before { background: #22c55e; }
+        .badge.occupied { background: var(--warning-bg); color: #d97706; }
+        .badge.occupied::before { background: #f59e0b; }
+        .badge.maintenance { background: var(--danger-bg); color: #dc2626; }
+        .badge.maintenance::before { background: #ef4444; }
+        .badge.pending { background: var(--gray-100); color: var(--gray-500); }
+        .badge.pending::before { background: var(--gray-500); }
+        .badge.in_locker { background: var(--primary-bg); color: var(--primary); }
+        .badge.in_locker::before { background: var(--primary); }
+        .badge.delivered { background: var(--success-bg); color: #16a34a; }
+        .badge.delivered::before { background: #22c55e; }
+        .badge.picked_up { background: var(--gray-100); color: var(--gray-700); }
+        .badge.picked_up::before { background: var(--gray-700); }
+
+        /* ---- Buttons ---- */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-outline {
+            background: #fff;
+            border: 1px solid var(--gray-300);
+            color: var(--gray-700);
+        }
+        .btn-outline:hover { background: var(--gray-50); }
+
+        /* ---- Modal ---- */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.5);
+            z-index: 200;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 32px;
+            width: 420px;
+            max-width: 90vw;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 13px; font-weight: 500;
+            color: var(--gray-700);
+            margin-bottom: 6px;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color .2s;
+        }
+        .form-group select:focus, .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+        }
+        .modal-actions {
+            display: flex; gap: 12px; justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* ---- Locker Grid ---- */
+        .locker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            padding: 24px;
+        }
+        .locker-box {
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .locker-box:hover { border-color: var(--primary); box-shadow: var(--shadow-md); }
+        .locker-box.available { border-color: #bbf7d0; background: #f0fdf4; }
+        .locker-box.occupied { border-color: #fde68a; background: #fffbeb; }
+        .locker-box.maintenance { border-color: #fecaca; background: #fef2f2; }
+        .locker-box .locker-icon { font-size: 32px; margin-bottom: 8px; }
+        .locker-box.available .locker-icon { color: var(--success); }
+        .locker-box.occupied .locker-icon { color: var(--warning); }
+        .locker-box.maintenance .locker-icon { color: var(--danger); }
+        .locker-box .locker-num { font-weight: 600; font-size: 16px; }
+        .locker-box .locker-status { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+
+        /* ---- Toast ---- */
+        .toast {
+            position: fixed; bottom: 24px; right: 24px;
+            background: var(--gray-900); color: #fff;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all .3s;
+            z-index: 300;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: #16a34a; }
+        .toast.error { background: #dc2626; }
+
+        /* ---- Loading ---- */
+        .loading {
+            display: flex; align-items: center; justify-content: center;
+            padding: 48px; color: var(--gray-500);
+        }
+        .spinner {
+            width: 24px; height: 24px;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+            margin-right: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; padding: 16px 0; }
+            .sidebar-logo span, .nav-item span { display: none; }
+            .sidebar-logo { padding: 0 0 24px; justify-content: center; }
+            .nav-item { justify-content: center; padding: 12px; border-left: none; }
+            .main { margin-left: 60px; padding: 20px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <i class="fas fa-lock"></i>
+        <span>Smart Locker</span>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-item active" data-section="dashboard">
+            <i class="fas fa-th-large"></i> <span>Dashboard</span>
+        </div>
+        <div class="nav-item" data-section="users">
+            <i class="fas fa-users"></i> <span>Người dùng</span>
+        </div>
+        <div class="nav-item" data-section="lockers">
+            <i class="fas fa-cube"></i> <span>Tủ khóa</span>
+        </div>
+        <div class="nav-item" data-section="packages">
+            <i class="fas fa-box"></i> <span>Bưu kiện</span>
+        </div>
+        <div class="nav-item" data-section="deliveries">
+            <i class="fas fa-truck"></i> <span>Giao hàng</span>
+        </div>
+    </nav>
+    <div style="padding: 16px 24px; font-size: 11px; color: rgba(255,255,255,.4);">
+        © 2026 Smart Locker
+    </div>
+</aside>
+
+<!-- Main Content -->
+<div class="main">
+
+    <!-- ====== DASHBOARD ====== -->
+    <div class="section active" id="sec-dashboard">
+        <div class="page-header">
+            <h1>Dashboard</h1>
+            <p>Tổng quan hệ thống tủ khóa thông minh</p>
+        </div>
+
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon users"><i class="fas fa-users"></i></div>
+                <div class="stat-info"><h3 id="stat-users">-</h3><p>Người dùng</p></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon lockers"><i class="fas fa-cube"></i></div>
+                <div class="stat-info"><h3 id="stat-lockers">-</h3><p>Tủ khóa</p></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon packages"><i class="fas fa-box"></i></div>
+                <div class="stat-info"><h3 id="stat-packages">-</h3><p>Bưu kiện</p></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon deliveries"><i class="fas fa-truck"></i></div>
+                <div class="stat-info"><h3 id="stat-deliveries">-</h3><p>Giao hàng</p></div>
+            </div>
+        </div>
+
+        <!-- Locker Visual Grid -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-grip" style="margin-right:8px;color:var(--gray-500)"></i>Sơ đồ Tủ khóa</h2>
+                <button class="btn btn-outline btn-sm" onclick="loadDashboard()">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+            </div>
+            <div class="locker-grid" id="locker-visual"></div>
+        </div>
+    </div>
+
+    <!-- ====== USERS ====== -->
+    <div class="section" id="sec-users">
+        <div class="page-header">
+            <h1>Người dùng</h1>
+            <p>Danh sách sinh viên sử dụng hệ thống</p>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-users" style="margin-right:8px;color:var(--primary)"></i>Tất cả người dùng</h2>
+            </div>
+            <div id="users-table"></div>
+        </div>
+    </div>
+
+    <!-- ====== LOCKERS ====== -->
+    <div class="section" id="sec-lockers">
+        <div class="page-header">
+            <h1>Tủ khóa</h1>
+            <p>Quản lý trạng thái tủ khóa</p>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-cube" style="margin-right:8px;color:var(--success)"></i>Danh sách tủ khóa</h2>
+            </div>
+            <div id="lockers-table"></div>
+        </div>
+    </div>
+
+    <!-- ====== PACKAGES ====== -->
+    <div class="section" id="sec-packages">
+        <div class="page-header">
+            <h1>Bưu kiện</h1>
+            <p>Theo dõi tình trạng bưu kiện</p>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-box" style="margin-right:8px;color:var(--warning)"></i>Tất cả bưu kiện</h2>
+            </div>
+            <div id="packages-table"></div>
+        </div>
+    </div>
+
+    <!-- ====== DELIVERIES ====== -->
+    <div class="section" id="sec-deliveries">
+        <div class="page-header">
+            <h1>Giao hàng</h1>
+            <p>Lịch sử giao nhận bưu kiện</p>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-truck" style="margin-right:8px;color:var(--danger)"></i>Tất cả đơn giao</h2>
+            </div>
+            <div id="deliveries-table"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Update Locker -->
+<div class="modal-overlay" id="modal-locker">
+    <div class="modal">
+        <h3><i class="fas fa-edit" style="margin-right:8px;color:var(--primary)"></i>Cập nhật Tủ khóa</h3>
+        <div class="form-group">
+            <label>Mã tủ</label>
+            <input type="text" id="modal-locker-num" readonly />
+        </div>
+        <div class="form-group">
+            <label>Trạng thái mới</label>
+            <select id="modal-locker-status">
+                <option value="available">Available (Trống)</option>
+                <option value="occupied">Occupied (Đang dùng)</option>
+                <option value="maintenance">Maintenance (Bảo trì)</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
+            <button class="btn btn-primary" onclick="submitLockerUpdate()">
+                <i class="fas fa-save"></i> Lưu
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = window.location.origin;
+
+// ---- Navigation ----
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        item.classList.add('active');
+        const sec = item.dataset.section;
+        document.getElementById('sec-' + sec).classList.add('active');
+        loadSection(sec);
+    });
+});
+
+function loadSection(sec) {
+    switch (sec) {
+        case 'dashboard':  loadDashboard(); break;
+        case 'users':      loadUsers(); break;
+        case 'lockers':    loadLockers(); break;
+        case 'packages':   loadPackages(); break;
+        case 'deliveries': loadDeliveries(); break;
+    }
+}
+
+// ---- API Fetch Helper ----
+async function api(path) {
+    try {
+        const r = await fetch(API + path);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return await r.json();
+    } catch (e) {
+        showToast('Lỗi kết nối API: ' + e.message, 'error');
+        return null;
+    }
+}
+
+function loading() {
+    return '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+}
+
+// ---- Dashboard ----
+async function loadDashboard() {
+    const [users, lockers, packages, deliveries] = await Promise.all([
+        api('/users'), api('/lockers'), api('/packages'), api('/deliveries')
+    ]);
+
+    document.getElementById('stat-users').textContent = users ? users.length : 0;
+    document.getElementById('stat-lockers').textContent = lockers ? lockers.length : 0;
+    document.getElementById('stat-packages').textContent = packages ? packages.length : 0;
+    document.getElementById('stat-deliveries').textContent = deliveries ? deliveries.length : 0;
+
+    // Locker visual grid
+    const grid = document.getElementById('locker-visual');
+    if (lockers && lockers.length) {
+        grid.innerHTML = lockers.map(l => `
+            <div class="locker-box ${l.status}" onclick="openLockerModal(${l.locker_id}, '${l.locker_number}', '${l.status}')">
+                <div class="locker-icon">
+                    <i class="fas ${l.status === 'available' ? 'fa-lock-open' : l.status === 'maintenance' ? 'fa-wrench' : 'fa-lock'}"></i>
+                </div>
+                <div class="locker-num">${l.locker_number}</div>
+                <div class="locker-status">${statusLabel(l.status)}</div>
+            </div>
+        `).join('');
+    } else {
+        grid.innerHTML = '<p style="padding:24px;color:var(--gray-500)">Chưa có tủ khóa nào.</p>';
+    }
+}
+
+function statusLabel(s) {
+    const map = { available: 'Trống', occupied: 'Đang dùng', maintenance: 'Bảo trì',
+                  pending: 'Chờ xử lý', in_locker: 'Trong tủ', delivered: 'Đã giao', picked_up: 'Đã lấy' };
+    return map[s] || s;
+}
+
+// ---- Users ----
+async function loadUsers() {
+    const el = document.getElementById('users-table');
+    el.innerHTML = loading();
+    const data = await api('/users');
+    if (!data) return;
+    el.innerHTML = `<table>
+        <thead><tr><th>ID</th><th>MSSV</th><th>Họ và tên</th><th>Email</th></tr></thead>
+        <tbody>${data.map(u => `<tr>
+            <td>${u.user_id}</td>
+            <td><strong>${u.student_id}</strong></td>
+            <td>${u.full_name}</td>
+            <td>${u.email}</td>
+        </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+// ---- Lockers ----
+async function loadLockers() {
+    const el = document.getElementById('lockers-table');
+    el.innerHTML = loading();
+    const data = await api('/lockers');
+    if (!data) return;
+    el.innerHTML = `<table>
+        <thead><tr><th>ID</th><th>Mã tủ</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+        <tbody>${data.map(l => `<tr>
+            <td>${l.locker_id}</td>
+            <td><strong>${l.locker_number}</strong></td>
+            <td><span class="badge ${l.status}">${statusLabel(l.status)}</span></td>
+            <td><button class="btn btn-outline btn-sm" onclick="openLockerModal(${l.locker_id}, '${l.locker_number}', '${l.status}')"><i class="fas fa-pen"></i> Sửa</button></td>
+        </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+// ---- Packages ----
+async function loadPackages() {
+    const el = document.getElementById('packages-table');
+    el.innerHTML = loading();
+    const data = await api('/packages');
+    if (!data) return;
+    el.innerHTML = `<table>
+        <thead><tr><th>ID</th><th>Mã vận đơn</th><th>Trạng thái</th></tr></thead>
+        <tbody>${data.map(p => `<tr>
+            <td>${p.package_id}</td>
+            <td><strong>${p.tracking_code}</strong></td>
+            <td><span class="badge ${p.status}">${statusLabel(p.status)}</span></td>
+        </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+// ---- Deliveries ----
+async function loadDeliveries() {
+    const el = document.getElementById('deliveries-table');
+    el.innerHTML = loading();
+    const data = await api('/deliveries');
+    if (!data) return;
+    el.innerHTML = `<table>
+        <thead><tr><th>ID</th><th>Mã bưu kiện</th><th>Mã tủ</th></tr></thead>
+        <tbody>${data.map(d => `<tr>
+            <td>${d.delivery_id}</td>
+            <td>${d.package_id}</td>
+            <td>${d.locker_id}</td>
+        </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+// ---- Modal ----
+let currentLockerId = null;
+
+function openLockerModal(id, num, status) {
+    currentLockerId = id;
+    document.getElementById('modal-locker-num').value = num;
+    document.getElementById('modal-locker-status').value = status;
+    document.getElementById('modal-locker').classList.add('show');
+}
+
+function closeModal() {
+    document.getElementById('modal-locker').classList.remove('show');
+    currentLockerId = null;
+}
+
+async function submitLockerUpdate() {
+    const status = document.getElementById('modal-locker-status').value;
+    try {
+        const r = await fetch(API + '/lockers/' + currentLockerId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        showToast('Cập nhật tủ khóa thành công!', 'success');
+        closeModal();
+        loadDashboard();
+        loadLockers();
+    } catch (e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
+
+// Click outside modal to close
+document.getElementById('modal-locker').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+});
+
+// ---- Toast ----
+function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ---- Init ----
+loadDashboard();
+</script>
+</body>
+</html>
